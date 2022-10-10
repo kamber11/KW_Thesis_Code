@@ -21,7 +21,7 @@ ICD_Sub <- subset(ICD10, (ICD10$f.eid %in% OPs$f.eid))
 # Extact Operation chemo date 
 
 
-#Run Chemo_date_finder## <- OPs_chemo_date is file needed
+#Run Chemo_date_finde script # <- OPs_chemo_date is file needed
 
 #................................START HERE IF ABOVE DATAFRAMES ARE READY..........................................
 
