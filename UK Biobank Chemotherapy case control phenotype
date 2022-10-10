@@ -1,0 +1,205 @@
+#R code for extracting case-control phenotypes from the UK Biobank in participants administered chemotherapy. Option to subset for specific cancers included.
+
+# Find people who had Chemo in Operation codes and save as Cohort filter
+
+library(dplyr)
+
+OPs <- OPS_4 %>% filter_all(any_vars(. %in% c('X352','X373','X384',
+                                            'X700','X701','X702','X703','X704','X705','X706','X707','X708','X709',
+                                            'X710','X711','X712','X713','X714','X715','X716','X717','X718','X719',
+                                            'X720','X721','X722','X723','X724','X725','X726','X727','X728','X729',
+                                            'X730','X731','X732','X733','X734','X735','X736','X737','X738','X739',
+                                            'X740','X741','X742','X743','X744','X745','X746','X747','X748','X749')))
+
+
+ChemoCohort <- as.data.frame(OPs$f.eid)
+
+# Subset ICD for just people given Chemo 
+
+ICD_Sub <- subset(ICD10, (ICD10$f.eid %in% OPs$f.eid))
+
+# Extact Operation chemo date 
+
+
+#Run Chemo_date_finder## <- OPs_chemo_date is file needed
+
+#................................START HERE IF ABOVE DATAFRAMES ARE READY..........................................
+
+#Subset ICD for people with phenotype and then filter Operation codes for those people, People in ICD and operations should now match  
+
+val_repl <- c('A400','A401','A402','A403','A404','A405','A406','A407','A408','A409',
+              'A410','A411','A412','A413','A414','A415','A416','A417','A418','A419',
+              'R572','B377','A427','A327','A021','A227') 
+
+
+ICD <- ICD_Sub %>% filter_all(any_vars(. %in% val_repl))
+
+ICD <- subset(ICD, (ICD$f.eid %in% ICD_Ovarian$f.eid)) 
+
+
+
+
+OPs <- subset(OPs, (OPs$f.eid %in% ICD$f.eid))
+
+
+#Subset dates dataframes to match - should  have 4 dfs ICD+dates and Operations+dates
+
+OPs_dates <- subset(OPs_chemo_date, (OPs_chemo_date$f.eid %in% ICD$f.eid))
+ICD_dates <- subset(ICD10_dates, (ICD10_dates$f.eid %in% ICD$f.eid))
+
+#...........................................
+
+#Find which column the matching code is in
+
+df <-  ICD
+IDs <- as.data.frame(ICD$f.eid)
+colnames(IDs) <- "f.eid"
+
+df <- as.data.frame(sapply(df, function(x) replace(x, x %in% val_repl, 1)))
+df[df != "1"] <- "0"  
+df[is.na(df)] <- 0
+
+df <- as.data.frame(sapply(df, as.numeric ))
+
+cols <- data.frame(choice = max.col(df))
+
+df$f.eid <- IDs$f.eid
+
+cols <- cbind(IDs,cols)
+
+#Add it as extra column to DATES df
+
+dates <- ICD_dates
+
+dates$choice <- cols$choice
+
+#Filter for date
+
+mat <- cbind(seq_len(nrow(dates)),dates$choice)
+dates$newvalue <-dates[mat]
+
+ICD_date <- dates[,c("f.eid","newvalue")]
+ICD_date$newvalue <- as.Date(ICD_date$newvalue)
+
+##Should now have OPs_chemo_date df and ICD_date df
+
+# Merge df containing Date of event and df containing df of chemo, also with patients IDs
+
+
+OPs_date <- subset(OPs_chemo_date, (OPs_chemo_date$f.eid %in% ICD_date$f.eid))
+
+
+matching <- merge(OPs_date, ICD_date , by = "f.eid")
+
+
+
+# Get the difference between event date and all chemo dates
+
+matching$difference1 <- difftime(matching$newvalue, matching$D1, units = c("days"))
+matching$difference2 <- difftime(matching$newvalue, matching$D2, units = c("days"))
+matching$difference3 <- difftime(matching$newvalue, matching$D3, units = c("days"))
+matching$difference4 <- difftime(matching$newvalue, matching$D4, units = c("days"))
+matching$difference5 <- difftime(matching$newvalue, matching$D5, units = c("days"))
+matching$difference6 <- difftime(matching$newvalue, matching$D6, units = c("days"))
+matching$difference7 <- difftime(matching$newvalue, matching$D7, units = c("days"))
+matching$difference8 <- difftime(matching$newvalue, matching$D8, units = c("days"))
+matching$difference9 <- difftime(matching$newvalue, matching$D9, units = c("days"))
+matching$difference10 <- difftime(matching$newvalue, matching$D10, units = c("days"))
+matching$difference11 <- difftime(matching$newvalue, matching$D11, units = c("days"))
+matching$difference12 <- difftime(matching$newvalue, matching$D12, units = c("days"))
+matching$difference13 <- difftime(matching$newvalue, matching$D13, units = c("days"))
+matching$difference14 <- difftime(matching$newvalue, matching$D14, units = c("days"))
+matching$difference15 <- difftime(matching$newvalue, matching$D15, units = c("days"))
+matching$difference16 <- difftime(matching$newvalue, matching$D16, units = c("days"))
+matching$difference17 <- difftime(matching$newvalue, matching$D17, units = c("days"))
+
+
+#Subset for desired time diff
+
+matching1 <- subset(matching, matching$difference1 < 91 & matching$difference1 > 0 
+                    |matching$difference2 < 91 & matching$difference2 > 0 
+                    |matching$difference3 < 91 & matching$difference3 > 0 
+                    |matching$difference4 < 91 & matching$difference4 > 0 
+                    |matching$difference5 < 91 & matching$difference5 > 0 
+                    |matching$difference6 < 91 & matching$difference6 > 0 
+                    |matching$difference7 < 91 & matching$difference7 > 0 
+                    |matching$difference8 < 91 & matching$difference8 > 0 
+                    |matching$difference9 < 91 & matching$difference9 > 0 
+                    |matching$difference10 < 91 & matching$difference10 > 0 
+                    |matching$difference11 < 91 & matching$difference11 > 0 
+                    |matching$difference12 < 91 & matching$difference12 > 0 
+                    |matching$difference13 < 91 & matching$difference13 > 0 
+                    |matching$difference14 < 91 & matching$difference14 > 0 
+                    |matching$difference15 < 91 & matching$difference15 > 0 
+                    |matching$difference16 < 91 & matching$difference16 > 0 
+                    |matching$difference17 < 91 & matching$difference17 > 0 )
+
+
+#Save IDs of people who had event 
+
+Pheno_IDs <- as.data.frame(matching1$f.eid)
+
+#Now make actual phenotype file
+
+cases <- Pheno_IDs
+colnames(cases)[1] <- "V1"
+cases$V2 <- cases$V1
+cases$V3 <- 2
+
+
+controls <- OPs_chemo_date
+controls <- subset(controls, (controls$f.eid %in% ICD_Ovarian$f.eid))
+controls <- subset(controls, !(controls$f.eid %in% cases$V1))
+controls <- as.data.frame(controls$f.eid)
+colnames(controls)[1] <- "V1"
+controls$V2 <- controls$V1
+controls$V3 <- 1
+
+phenotype <- rbind(cases,controls)
+
+write.table(phenotype,'~/Desktop/Sepsis_chemo_Ovarian_3months.txt', row.names = FALSE, sep = ' ', quote = FALSE,col.names = FALSE)
+
+
+matching2 <- subset(matching, matching$difference1 < 31 & matching$difference1 > 0 
+                    |matching$difference2 < 31 & matching$difference2 > 0 
+                    |matching$difference3 < 31 & matching$difference3 > 0 
+                    |matching$difference4 < 31 & matching$difference4 > 0 
+                    |matching$difference5 < 31 & matching$difference5 > 0 
+                    |matching$difference6 < 31 & matching$difference6 > 0 
+                    |matching$difference7 < 31 & matching$difference7 > 0 
+                    |matching$difference8 < 31 & matching$difference8 > 0 
+                    |matching$difference9 < 31 & matching$difference9 > 0 
+                    |matching$difference10 < 31 & matching$difference10 > 0 
+                    |matching$difference11 < 31 & matching$difference11 > 0 
+                    |matching$difference12 < 31 & matching$difference12 > 0 
+                    |matching$difference13 < 31 & matching$difference13 > 0 
+                    |matching$difference14 < 31 & matching$difference14 > 0 
+                    |matching$difference15 < 31 & matching$difference15 > 0 
+                    |matching$difference16 < 31 & matching$difference16 > 0 
+                    |matching$difference17 < 31 & matching$difference17 > 0 )
+
+
+Pheno_IDs <- as.data.frame(matching2$f.eid)
+
+#Now make actual phenotype file
+
+cases <- Pheno_IDs
+colnames(cases)[1] <- "V1"
+cases$V2 <- cases$V1
+cases$V3 <- 2
+
+
+controls <- OPs_chemo_date
+controls <- subset(controls, (controls$f.eid %in% ICD_Ovarian$f.eid))
+controls <- subset(controls, !(controls$f.eid %in% cases$V1))
+controls <- as.data.frame(controls$f.eid)
+colnames(controls)[1] <- "V1"
+controls$V2 <- controls$V1
+controls$V3 <- 1
+
+phenotype <- rbind(cases,controls)
+
+write.table(phenotype,'~/Desktop/Sepsis_chemo_Ovarian_1month.txt', row.names = FALSE, sep = ' ', quote = FALSE,col.names = FALSE)
+
+
+
