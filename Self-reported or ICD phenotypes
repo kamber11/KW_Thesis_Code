@@ -1,0 +1,27 @@
+#Extract participants with phenotype. 
+y <- SelfReported # Set as SelfReported or ICD10
+x <- y %>% filter_all(any_vars(. %in% c('L400','L401','L402','L403','L404','L405','L406','L407','L408','L409',))) #Change for phenotype of interest
+
+#Cases transform data
+cases <- x
+cases <- as.data.frame(cases$f.eid)
+colnames(cases)[1] <- "V1"
+cases$V2 <- cases$V1
+cases$V3 <- 2
+
+#Extract controls and transform data
+controls <- subset(y, !(y$f.eid %in% cases$V1))
+controls <- as.data.frame(controls$f.eid)
+colnames(controls)[1] <- "V1"
+controls$V2 <- controls$V1
+controls$V3 <- 1
+
+#Combine to make phenotype file
+phenotype <- rbind(cases,controls)
+
+#Write phenotype file
+write.table(phenotype,'~/Pheno.txt', row.names = FALSE, sep = ' ', quote = FALSE,col.names = FALSE)
+
+#Check ID'S are unique
+n_occur <- data.frame(table(phenotype$V1))
+
