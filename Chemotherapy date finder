@@ -1,0 +1,92 @@
+#Find which column the matching thing is in -  start after OPs <- subset(OPs, (OPs$f.eid %in% ICD$f.eid))
+
+
+df <-  OPs
+
+
+val_repl <- c('X352','X373','X384',
+              'X700','X701','X702','X703','X704','X705','X706','X707','X708','X709',
+              'X710','X711','X712','X713','X714','X715','X716','X717','X718','X719',
+              'X720','X721','X722','X723','X724','X725','X726','X727','X728','X729',
+              'X730','X731','X732','X733','X734','X735','X736','X737','X738','X739',
+              'X740','X741','X742','X743','X744','X745','X746','X747','X748','X749') 
+
+
+df <- as.data.frame(sapply(df, function(x) replace(x, x %in% val_repl, 1)))
+
+IDs <- as.data.frame(df$f.eid)
+colnames(IDs) <- "f.eid"
+
+df[df != "1"] <- "0"  
+df[is.na(df)] <- 0
+
+df <- as.data.frame(sapply(df, as.numeric ))
+
+names(df)[2:118]<-paste0(2:118)
+
+# get index
+
+df$Cols <- apply(df[2:118], 1, function(x) toString(names(x)[x == 1]))
+
+df$f.eid <- IDs$f.eid
+
+cols <- df[,c('f.eid','Cols')]
+
+setDT(cols)[, paste0("Cols", 1:17) := tstrsplit(Cols, ",")]
+
+cols <- subset(cols, select = -c(Cols) )
+
+cols1 <- cols
+
+cols1$index <- 1:nrow(cols1)
+
+cols1$Cols1 <- paste(cols1$index,cols1$Cols1,sep = ",")
+cols1$Cols2 <- paste(cols1$index,cols1$Cols2,sep = ",")
+cols1$Cols3 <- paste(cols1$index,cols1$Cols3,sep = ",")
+cols1$Cols4 <- paste(cols1$index,cols1$Cols4,sep = ",")
+cols1$Cols5 <- paste(cols1$index,cols1$Cols5,sep = ",")
+cols1$Cols6 <- paste(cols1$index,cols1$Cols6,sep = ",")
+cols1$Cols7 <- paste(cols1$index,cols1$Cols7,sep = ",")
+cols1$Cols8 <- paste(cols1$index,cols1$Cols8,sep = ",")
+cols1$Cols9 <- paste(cols1$index,cols1$Cols9,sep = ",")
+cols1$Cols10 <- paste(cols1$index,cols1$Cols10,sep = ",")
+cols1$Cols11 <- paste(cols1$index,cols1$Cols11,sep = ",")
+cols1$Cols12 <- paste(cols1$index,cols1$Cols12,sep = ",")
+cols1$Cols13 <- paste(cols1$index,cols1$Cols13,sep = ",")
+cols1$Cols14 <- paste(cols1$index,cols1$Cols14,sep = ",")
+cols1$Cols15 <- paste(cols1$index,cols1$Cols15,sep = ",")
+cols1$Cols16 <- paste(cols1$index,cols1$Cols16,sep = ",")
+cols1$Cols17 <- paste(cols1$index,cols1$Cols17,sep = ",")
+
+cols1$Cols1 <- (sub(".*,NA", "NA", cols1$Cols1))
+cols1$Cols2 <- (sub(".*,NA", "NA", cols1$Cols2))
+cols1$Cols3 <- (sub(".*,NA", "NA", cols1$Cols3))
+cols1$Cols4 <- (sub(".*,NA", "NA", cols1$Cols4))
+cols1$Cols5 <- (sub(".*,NA", "NA", cols1$Cols5))
+cols1$Cols6 <- (sub(".*,NA", "NA", cols1$Cols6))
+cols1$Cols7 <- (sub(".*,NA", "NA", cols1$Cols7))
+cols1$Cols8 <- (sub(".*,NA", "NA", cols1$Cols8))
+cols1$Cols9 <- (sub(".*,NA", "NA", cols1$Cols9))
+cols1$Cols10 <- (sub(".*,NA", "NA", cols1$Cols10))
+cols1$Cols11 <- (sub(".*,NA", "NA", cols1$Cols11))
+cols1$Cols12 <- (sub(".*,NA", "NA", cols1$Cols12))
+cols1$Cols13 <- (sub(".*,NA", "NA", cols1$Cols13))
+cols1$Cols14 <- (sub(".*,NA", "NA", cols1$Cols14))
+cols1$Cols15 <- (sub(".*,NA", "NA", cols1$Cols15))
+cols1$Cols16 <- (sub(".*,NA", "NA", cols1$Cols16))
+cols1$Cols17 <- (sub(".*,NA", "NA", cols1$Cols17))
+
+cols1 <- subset(cols1, select = -c(f.eid) )
+
+#Filter for date
+
+OPs_dates_chemo <- subset(OPS_4_date, (OPS_4_date$f.eid %in% OPs$f.eid))
+dates_1 <- OPs_dates_chemo
+
+
+output <- dates_1[cols1]
+
+
+
+OPs_chemo_date_2 <- dates[,c("f.eid","newvalue")]
+OPs_chemo_date_2$newvalue <- as.Date(OPs_chemo_date_2$newvalue)
